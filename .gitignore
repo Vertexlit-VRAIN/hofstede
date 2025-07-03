@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+uv.lock
+
+# Data and output
+data/generated_dataset.json
+inference_output/
+
+# IDE and editor files
+.idea/
+.vscode/
+
+# Operating System files
+.DS_Store
+Thumbs.db

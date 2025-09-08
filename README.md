@@ -1,6 +1,6 @@
 # Hofstede Cultural Dimensions Model Analysis
 
-This project focuses on generating datasets, performing inference, and evaluating models related to Hofstede's cultural dimensions. It provides tools for automated data generation, model inference on this data, and a user interface for evaluating the model outputs.
+This project focuses on generating datasets, performing inference, and evaluating models related to Hofstede's cultural dimensions. It provides tools for automated data generation, multi-model inference, and a user interface for evaluating outputs.  
 
 ## Table of Contents
 - [Features](#features)
@@ -11,130 +11,160 @@ This project focuses on generating datasets, performing inference, and evaluatin
   - [Dataset Generation](#dataset-generation)
   - [Model Inference](#model-inference)
   - [Evaluation UI](#evaluation-ui)
+- [Tested Models](#tested-models)
+- [Execution Environment](#execution-environment)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
 
+---
+
 ## Features
-- **Automated Dataset Generation**: Tools to create synthetic datasets based on Hofstede's cultural dimensions.
-- **Model Inference**: Scripts to run various language models (LLMs) on the generated datasets, supporting multi-GPU setups.
-- **Interactive Evaluation UI**: A Gradio-based web interface for human evaluation and correction of model outputs.
+- **Automated Dataset Generation**: Scripts for creating synthetic datasets aligned with Hofstede's cultural dimensions.
+- **Model Inference**: Supports inference across multiple large language models (LLMs), with multi-GPU and quantization options.
+- **Inference Outputs**: Each tested model has its own folder with **three independent runs**, stored as `.jsonl` files for reproducibility and variance analysis.
+- **Interactive Evaluation UI**: A Gradio-based web interface for human evaluation, correction, and annotation of model outputs.
+
+---
 
 ## Setup and Installation
 
 ### Prerequisites
 - Python 3.10 or higher.
-- `uv` for dependency management (recommended, as indicated by `uv.lock` and `pyproject.toml`). Alternatively, `conda` can be used as seen in `run_job.sh` scripts.
+- `uv` for dependency management (recommended).  
+  Alternatively, `conda` can be used (as shown in the SLURM job scripts).
 
 ### Dependency Installation
 
-It is recommended to use `uv` for managing dependencies.
+Using **uv**:
+```bash
+pip install uv
+uv sync
+````
 
-1.  **Install `uv`**:
-    ```bash
-    pip install uv
-    ```
+Using **conda**:
 
-2.  **Install Project Dependencies**:
-    Navigate to the root of the project and run:
-    ```bash
-    uv sync
-    ```
-    This will install all dependencies listed in `pyproject.toml`.
+```bash
+conda create -n hofstede python=3.10
+conda activate hofstede
+pip install -r generate_dataset/requirements_gen_ds.txt
+# Then install additional dependencies from pyproject.toml if needed
+```
 
-    If you prefer `conda`, you can create an environment and install dependencies manually:
-    ```bash
-    conda create -n hofstede python=3.10
-    conda activate hofstede
-    pip install -r requirements_gen_ds.txt # for dataset generation
-    # Install other dependencies from pyproject.toml manually or using pip install <package_name>
-    ```
+---
 
 ## Usage
 
 ### Dataset Generation
-The `generate_dataset/` directory contains scripts for generating synthetic datasets.
 
-To run the dataset generation job (e.g., using SLURM as indicated by `run_job.sh`):
+Located in `generate_dataset/`.
+
+Example (with SLURM):
+
 ```bash
 cd generate_dataset/
 ./run_job.sh
 ```
-**Note**: Ensure you set your Hugging Face token in the `run_job.sh` script (e.g., `export HF_TOKEN="hf_YOUR_TOKEN_HERE"`).
-This script typically runs `dataset_multigpu.py` or `dataset_ollama.py` to create `generated_dataset.json` in the `data/` directory.
+
+This generates `hofstede_generated.json` inside the `outputs/` folder.
+Make sure to set your Hugging Face token (`HF_TOKEN`) in `run_job.sh`.
+
+---
 
 ### Model Inference
-The `inference/` directory contains scripts for running inference with various models.
 
-- `inference.py`: General inference script.
-- `multi_gpu_inference.py`: For inference across multiple GPUs.
-- `multi_inference.py`: Another multi-inference script.
+Located in `inference/`.
 
-Example of running inference (adjust parameters as needed):
+Scripts:
+
+* `inference.py`: Single-model inference using Ollama API.
+* `multi_inference.py`: Runs **multiple models** across multiple runs (default: 3 runs per model).
+* `multi_gpu_inference.py`: Multi-GPU Hugging Face inference, supporting quantization for large models.
+
+Example:
+
 ```bash
-python inference/inference.py --model_name "google/gemma-3-4b-it" --input_file "data/generated_dataset.json" --output_dir "inference_output/"
+python inference/multi_gpu_inference.py \
+  --model_name "google/gemma-3-4b-it" \
+  --input_file "evaluation_ui/inputs/part_1.json" \
+  --output_dir "inference/output/" \
+  --num_inferences 3
 ```
-Inference results will be saved in the `inference_output/` directory, typically in a subdirectory named after the model.
+
+**Inference Outputs:**
+Each model has its own folder under `inference/output/`, e.g.:
+
+```
+inference/output/
+├── google_gemma-3-4b-it/
+│   ├── inference_results_run_1.jsonl
+│   ├── inference_results_run_2.jsonl
+│   └── inference_results_run_3.jsonl
+├── Qwen_Qwen3-14B/
+│   ├── inference_results_run_1.jsonl
+│   ├── inference_results_run_2.jsonl
+│   └── inference_results_run_3.jsonl
+└── ...
+```
+
+Each `.jsonl` file contains one JSON object per evaluated item.
+
+---
 
 ### Evaluation UI
-The `evaluation_ui/` provides a web-based interface for evaluating and correcting model outputs.
 
-#### Setup
-You only need to install the `gradio` library if not already installed with `uv sync`:
+Located in `evaluation_ui/`.
+
+Run with:
+
 ```bash
-pip install gradio
+cd evaluation_ui/
+python main.py 1
 ```
 
-#### Directory Structure
-Ensure your input data for evaluation is organized as follows:
-```
-evaluation_ui/
-├── main.py
-└── inputs/
-    ├── part_1.json   <-- Your input data file
-    ├── part_2.json
-    └── ...
-```
-The `outputs/` directory will be created automatically by the script when you save your first item.
+This launches a local Gradio app (default: [http://127.0.0.1:7860](http://127.0.0.1:7860)) for manual review.
 
-#### How to Run the Application
-1.  Open your terminal or command prompt.
-2.  Navigate to the `evaluation_ui/` directory.
-3.  Run the script, providing the `part_id` of the data file you want to evaluate as a command-line argument. The `part_id` must be a number from 1 to 5 (or as per your input file naming convention).
+* Inputs: `inputs/part_X.json`
+* Outputs: Saved as `outputs/evaluated_data_part_X.jsonl`
+* Features: Progress tracking, reset buttons, manual fixes for invalid JSON.
 
-    **Example:** To evaluate the `part_1.json` file:
-    ```bash
-    python main.py 1
-    ```
+---
 
-4.  The script will start a local web server and print a URL, usually `http://127.0.0.1:7860`. Open this URL in your web browser to access the UI.
+## Tested Models
 
-#### Using the Interface
-The interface is designed for a straightforward evaluation workflow:
+The following models have been tested (see `inference/model_to_analyze.md`):
 
-1.  **Information Panel:** The top text boxes (`Domain`, `Dimension`, `Question`) show the context for the current item. These are for display only.
+| Family                  | Variants Tested              |
+| ----------------------- | ---------------------------- |
+| **Gemma-3**             | 1B, 4B, 12B, 27B             |
+| **DeepSeek-R1 Distill** | 1.5B, 7B, 8B, 14B, 32B       |
+| **Qwen-3**              | 0.6B, 1.7B, 4B, 8B, 14B, 32B |
+| **Mistral**             | 7B                           |
+| **Llama-3.1**           | 8B                           |
+| **Granite-3.3**         | 2B, 8B                       |
+| **Phi-4**               | 14B                          |
 
-2.  **Statements Panel:**
-    -   The five `Level X Statement` boxes contain the model-generated output. **You can edit the text in these boxes directly.**
-    -   The **Reset Button (🔄)** next to each statement will restore its text to the original value from the input file.
+**Special settings:**
 
-3.  **Action Buttons:** After reviewing (and editing, if necessary), click one of the three buttons to save and move to the next item.
-    -   `Accept (Good)`: Click this if the five statements are accurate and well-formed as they are. No changes are needed.
-    -   `Save Changes (Bad)`: Click this if the statements were semantically incorrect or poorly phrased and **you have edited them to be correct**.
-    -   `Save Manual Fix (Format Error)`: This button **only appears** if the original model output could not be parsed (e.g., it was not valid JSON). In this case, you must manually type in all five statements before clicking this button to save your work.
+* Gemma-3 27B → requires 6 GPUs.
+* DeepSeek-R1 32B → 4 GPUs, 4-bit quantization.
+* Qwen-3 32B → 4 GPUs, 4-bit quantization.
+* All other models → 4 GPUs (full precision).
 
-4.  **Progress Bar:** The label at the bottom shows your overall progress for the current data part.
+---
 
-#### Key Features
--   **Automatic Progress Saving:** The application saves your work after every item is evaluated. You can safely stop the script (Ctrl+C in the terminal) and relaunch it later. It will automatically resume from the last completed item.
--   **Output File:** Your evaluated data is saved in the `outputs/` directory in a file named `evaluated_data_part_<PART_ID>.jsonl`. Each line in this file is a complete JSON object representing one evaluated item.
+## Execution Environment
+
+All experiments were executed on **NVIDIA A40 GPUs** (48GB each), but each GPU was **limited to 24GB of usable memory**.
+
+This GPU constraint was the main factor influencing which models and configurations could be run (e.g., Gemma-3 27B required 6 GPUs; 32B models required 4 GPUs in 4-bit precision).
+
+---
 
 ## Project Structure
-- `.gitignore`: Specifies intentionally untracked files to ignore.
-- `pyproject.toml`: Project metadata and dependencies.
-- `run_job.sh`: Example SLURM job script for main tasks.
-- `uv.lock`: Lock file for `uv` dependency management.
-- `data/`: Contains generated datasets.
-- `evaluation_ui/`: Contains the Gradio-based evaluation interface.
-- `generate_dataset/`: Scripts for generating synthetic datasets.
-- `inference/`: Scripts for running model inference.
+
+* `generate_dataset/` → dataset generation scripts.
+* `inference/` → inference scripts + outputs per model.
+* `evaluation_ui/` → Gradio interface for manual evaluation.
+* `pyproject.toml` → dependency management.
+* `run_job.sh` / `run_slurm_inference.sh` → SLURM job scripts.

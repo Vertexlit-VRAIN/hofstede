@@ -1,0 +1,6 @@
+domain,n_runs,std_global,range_global,agreement_pct_global,n_questions,agreement_pct_avg_question,std_avg_question,range_avg_question,level_1_count,level_2_count,level_3_count,level_4_count,level_5_count,level_mode_global,level_mean_global
+Arts,519,0.9,4,40.5,173,100.0,0.0,0,84,186,210,27,12,3,2.42
+Education,510,0.87,4,45.3,170,100.0,0.0,0,60,231,174,33,12,2,2.42
+Scientific,519,0.98,4,42.8,173,100.0,0.0,0,27,222,192,33,45,2,2.71
+Wellness,510,1.03,4,38.2,170,100.0,0.0,0,72,153,195,66,24,3,2.64
+Work,507,0.99,4,38.5,169,100.0,0.0,0,54,195,177,54,27,2,2.62

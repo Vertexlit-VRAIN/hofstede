@@ -1,0 +1,7 @@
+dimension_code,n_runs,std_global,range_global,agreement_pct_global,n_questions,agreement_pct_avg_question,std_avg_question,range_avg_question,level_1_count,level_2_count,level_3_count,level_4_count,level_5_count,level_mode_global,level_mean_global
+IDV,396,0.98,4,51.5,132,100.0,0.0,0,18,48,204,75,51,3,3.23
+IVR,417,0.77,4,55.4,139,100.0,0.0,0,39,117,231,27,3,3,2.61
+LTO,420,0.93,4,42.1,141,100.0,0.0,0,102,123,177,9,9,3,2.29
+MAS,435,0.9,4,44.1,145,100.0,0.0,0,6,48,192,132,57,3,3.43
+PDI,450,0.83,4,48.0,150,100.0,0.0,0,48,153,216,24,9,3,2.54
+UAI,441,0.81,4,52.4,148,100.0,0.0,0,39,138,231,24,9,3,2.61

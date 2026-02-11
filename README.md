@@ -1,4 +1,4 @@
-# 🌍 Hofstede Cultural Dimensions Model Analysis
+# Hofstede Cultural Dimensions Model Analysis
 
 This repository contains a comprehensive framework for **generating, evaluating, and analyzing LLM behaviors** through the lens of **Hofstede's Cultural Dimensions**. It provides an end-to-end pipeline: from synthetic dataset generation to multi-model inference and manual human evaluation.
 

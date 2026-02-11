@@ -1,89 +1,87 @@
-# Hofstede Cultural Dimensions Model Analysis
+# 🌍 Hofstede Cultural Dimensions Model Analysis
 
-This project focuses on generating datasets, performing inference, and evaluating models related to Hofstede's cultural dimensions. It provides tools for automated data generation, multi-model inference, and a user interface for evaluating outputs.  
-
-## Table of Contents
-- [Features](#features)
-- [Setup and Installation](#setup-and-installation)
-  - [Prerequisites](#prerequisites)
-  - [Dependency Installation](#dependency-installation)
-- [Usage](#usage)
-  - [Dataset Generation](#dataset-generation)
-  - [Model Inference](#model-inference)
-  - [Evaluation UI](#evaluation-ui)
-- [Tested Models](#tested-models)
-- [Execution Environment](#execution-environment)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+This repository contains a comprehensive framework for **generating, evaluating, and analyzing LLM behaviors** through the lens of **Hofstede's Cultural Dimensions**. It provides an end-to-end pipeline: from synthetic dataset generation to multi-model inference and manual human evaluation.
 
 ---
 
-## Features
-- **Automated Dataset Generation**: Scripts for creating synthetic datasets aligned with Hofstede's cultural dimensions.
-- **Model Inference**: Supports inference across multiple large language models (LLMs), with multi-GPU and quantization options.
-- **Inference Outputs**: Each tested model has its own folder with **three independent runs**, stored as `.jsonl` files for reproducibility and variance analysis.
-- **Interactive Evaluation UI**: A Gradio-based web interface for human evaluation, correction, and annotation of model outputs.
+## 🚀 Overview
+
+The project aims to quantify cultural biases and tendencies in Large Language Models (LLMs) by testing them against the six dimensions of national culture defined by Geert Hofstede:
+
+1.  **Power Distance (PDI)**
+2.  **Individualism vs. Collectivism (IDV)**
+3.  **Masculinity vs. Femininity (MAS)**
+4.  **Uncertainty Avoidance (UAI)**
+5.  **Long-term vs. Short-term Orientation (LTO)**
+6.  **Indulgence vs. Restraint (IVR)**
+
+### Key Features
+-   🤖 **Automated Dataset Generation**: Create high-quality, culturally-aligned synthetic datasets.
+-   ⚡ **Scalable Inference**: Multi-GPU/Multi-Run support for Hugging Face and Ollama models.
+-   🖥️ **Interactive Evaluation UI**: Gradio-based interface for human verification and grounding.
+-   📊 **Statistical Analysis**: Tools for ANOVA, regression, and visualization (radars, maps).
 
 ---
 
-## Setup and Installation
+## 🛠️ Project Structure
+
+```text
+.
+├── generate_dataset/     # Scripts to create synthetic prompts (Hugging Face)
+├── inference/            # Model execution (SLURM/Python scripts)
+│   └── output/           # RAW Inference results (.jsonl)
+├── evaluation_ui/        # Gradio app for human evaluation
+│   ├── inputs/           # Data to be evaluated (JSON)
+│   └── outputs/          # Ground-truth evaluated data (JSONL)
+├── analysis/             # Statistical analysis and plotting
+│   ├── src/              # Core calculation and plotting scripts
+│   ├── data/             # Reference CSVs (Hofstede indices)
+│   └── metrics/          # Calculated metrics and figures
+├── data/                 # Common data storage
+├── pyproject.toml        # Dependency definitions
+└── README.md             # This file
+```
+
+---
+
+## ⚙️ Setup and Installation
 
 ### Prerequisites
-- Python 3.10 or higher.
-- `uv` for dependency management (recommended).  
-  Alternatively, `conda` can be used (as shown in the SLURM job scripts).
+-   **Python 3.10+**
+-   **NVIDIA GPUs** (recommended for inference phase)
+-   `uv` (recommended) or `conda`
 
 ### Dependency Installation
 
-Using **uv**:
+Initialize the environment using **uv**:
 ```bash
-pip install uv
 uv sync
-````
+# This installs all dependencies from pyproject.toml and uv.lock
+```
 
 Using **conda**:
-
 ```bash
 conda create -n hofstede python=3.10
 conda activate hofstede
 pip install -r generate_dataset/requirements_gen_ds.txt
-# Then install additional dependencies from pyproject.toml if needed
+# Additional dependencies can be installed as needed
 ```
 
 ---
 
-## Usage
+## 🏃 Workflow Execution
 
-### Dataset Generation
-
-Located in `generate_dataset/`.
-
-Example (with SLURM):
-
+### 1. Dataset Generation
+Generates synthetic data points based on cultural dimensions.
 ```bash
 cd generate_dataset/
-./run_job.sh
+./run_job.sh  # Requires HF_TOKEN
 ```
 
-This generates `hofstede_generated.json` inside the `outputs/` folder.
-Make sure to set your Hugging Face token (`HF_TOKEN`) in `run_job.sh`.
-
----
-
-### Model Inference
-
-Located in `inference/`.
-
-Scripts:
-
-* `inference.py`: Single-model inference using Ollama API.
-* `multi_inference.py`: Runs **multiple models** across multiple runs (default: 3 runs per model).
-* `multi_gpu_inference.py`: Multi-GPU Hugging Face inference, supporting quantization for large models.
-
-Example:
-
+### 2. Model Inference
+Executes inference across multiple models.
 ```bash
+# Example: Multi-GPU inference with quantization
 python inference/multi_gpu_inference.py \
   --model_name "google/gemma-3-4b-it" \
   --input_file "evaluation_ui/inputs/part_1.json" \
@@ -91,80 +89,60 @@ python inference/multi_gpu_inference.py \
   --num_inferences 3
 ```
 
-**Inference Outputs:**
-Each model has its own folder under `inference/output/`, e.g.:
-
-```
-inference/output/
-├── google_gemma-3-4b-it/
-│   ├── inference_results_run_1.jsonl
-│   ├── inference_results_run_2.jsonl
-│   └── inference_results_run_3.jsonl
-├── Qwen_Qwen3-14B/
-│   ├── inference_results_run_1.jsonl
-│   ├── inference_results_run_2.jsonl
-│   └── inference_results_run_3.jsonl
-└── ...
-```
-
-Each `.jsonl` file contains one JSON object per evaluated item.
-
----
-
-### Evaluation UI
-
-Located in `evaluation_ui/`.
-
-Run with:
-
+### 3. Human Evaluation (UI)
+Manual review of model outputs to ensure quality and correctness.
 ```bash
 cd evaluation_ui/
-python main.py 1
+python main.py 1 # 1-5 depends on the part you are evaluating
+```
+The UI allows marking outputs as **Good**, **Bad**, or **Correction required**, and saves results to `evaluation_ui/outputs/`.
+
+### 4. Statistical Analysis
+Generate metrics, significance tests, and visualizations.
+```bash
+cd analysis/src/
+python run_all.py --models_csv ../data/results.csv --out_dir ../metrics/
+```
+This script runs the full pipeline:
+1.  `compute_metrics.py`: Basic statistics.
+2.  `stats_descriptives.py`: Summary statistics.
+3.  `plot_figures.py`: Radar charts and performance plots.
+4.  `anova_regression.py`: Significance testing.
+5.  `make_maps.py`: World maps visualization.
+
+---
+
+## 📊 Data Schema (Evaluated Format)
+
+The evaluated data is stored as `.jsonl`. Each line contains:
+```json
+{
+  "index": 12,
+  "domain": "Education",
+  "dimension_code": "PDI",
+  "question": "How should a teacher...",
+  "model_output_raw": "...",
+  "model_output_parsed": [
+    {"statement": "Low PDI approach...", "level": 1},
+    {"statement": "High PDI approach...", "level": 5}
+  ],
+  "evaluation": "good"
+}
 ```
 
-This launches a local Gradio app (default: [http://127.0.0.1:7860](http://127.0.0.1:7860)) for manual review.
-
-* Inputs: `inputs/part_X.json`
-* Outputs: Saved as `outputs/evaluated_data_part_X.jsonl`
-* Features: Progress tracking, reset buttons, manual fixes for invalid JSON.
-
 ---
 
-## Tested Models
+## 🔬 Tested Models
 
-The following models have been tested (see `inference/model_to_analyze.md`):
+We benchmarked a wide range of architectures on **NVIDIA A40 GPUs** (limited to 24GB active VRAM per GPU).
 
-| Family                  | Variants Tested              |
-| ----------------------- | ---------------------------- |
-| **Gemma-3**             | 1B, 4B, 12B, 27B             |
-| **DeepSeek-R1 Distill** | 1.5B, 7B, 8B, 14B, 32B       |
-| **Qwen-3**              | 0.6B, 1.7B, 4B, 8B, 14B, 32B |
-| **Mistral**             | 7B                           |
-| **Llama-3.1**           | 8B                           |
-| **Granite-3.3**         | 2B, 8B                       |
-| **Phi-4**               | 14B                          |
+| Family | Variants Tested |
+| :--- | :--- |
+| **Gemma-3** | 1B, 4B, 12B, 27B |
+| **DeepSeek-R1** | 1.5B, 7B, 8B, 14B, 32B |
+| **Qwen-3** | 0.6B, 1.7B, 4B, 8B, 14B, 32B |
+| **Mistral** | 7B |
+| **Llama-3.1** | 8B |
 
-**Special settings:**
-
-* Gemma-3 27B → requires 6 GPUs.
-* DeepSeek-R1 32B → 4 GPUs, 4-bit quantization.
-* Qwen-3 32B → 4 GPUs, 4-bit quantization.
-* All other models → 4 GPUs (full precision).
-
----
-
-## Execution Environment
-
-All experiments were executed on **NVIDIA A40 GPUs** (48GB each), but each GPU was **limited to 24GB of usable memory**.
-
-This GPU constraint was the main factor influencing which models and configurations could be run (e.g., Gemma-3 27B required 6 GPUs; 32B models required 4 GPUs in 4-bit precision).
-
----
-
-## Project Structure
-
-* `generate_dataset/` → dataset generation scripts.
-* `inference/` → inference scripts + outputs per model.
-* `evaluation_ui/` → Gradio interface for manual evaluation.
-* `pyproject.toml` → dependency management.
-* `run_job.sh` / `run_slurm_inference.sh` → SLURM job scripts.
+> [!NOTE]
+> 32B models required 4 GPUs with 4-bit quantization, while Gemma-3 27B required 6 GPUs due to memory constraints.

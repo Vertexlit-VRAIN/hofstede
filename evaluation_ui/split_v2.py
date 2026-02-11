@@ -108,7 +108,6 @@ def main():
     parts = []
     current_index = 0
     for i in range(num_parts):
-        # Los primeros 'remainder' partes obtienen un elemento extra para una división equitativa
         part_size = base_size + (1 if i < remainder else 0)
         end_index = current_index + part_size
         part_data = limited_data[current_index:end_index]
@@ -117,7 +116,7 @@ def main():
         logging.info(f"La Parte {i+1} tendrá {len(part_data)} elementos.")
 
     # --- 6. Escribir Archivos de Salida ---
-    output_dir = Path(".") # Guardar en el directorio actual
+    output_dir = Path(".")
     
     for i, part_data in enumerate(parts, 1):
         output_path = output_dir / f"part_{i}.json"
@@ -131,6 +130,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # Necesitamos importar argparse dentro de la función o aquí
     import argparse
     main()
